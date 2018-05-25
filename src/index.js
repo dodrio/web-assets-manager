@@ -1,24 +1,25 @@
 'use strict';
 
 // simple wrapper for XMLHttpRequest
-function fetchURL(url) {
+function fetchURL(name, url) {
   return new Promise(function(resolve, reject) {
     const xhr = new window.XMLHttpRequest();
     xhr.open('GET', url);
+    xhr.responseType = 'arraybuffer';
     xhr.onload = function() {
       if ((this.status >= 200 && this.status < 300) || this.status === 304) {
-        resolve(xhr.response);
+        resolve([name, this.response]);
       } else {
         reject({
           status: this.status,
-          statusText: xhr.statusText,
+          statusText: this.statusText,
         });
       }
     };
     xhr.onerror = function() {
       reject({
         status: this.status,
-        statusText: xhr.statusText,
+        statusText: this.statusText,
       });
     };
     xhr.send();
@@ -26,26 +27,40 @@ function fetchURL(url) {
 }
 
 class WebAssetsManager {
+  constructor() {
+    this.cache = {};
+  }
+
   setup(assets) {
     this.assets = assets;
   }
 
   preload(progress, complete) {
-    const urls = Object.values(this.assets);
-    const totalCount = urls.length;
+    const assets = Object.entries(this.assets);
+    const totalCount = assets.length;
     let currentCount = 0;
     let currentProgress = 0;
 
-    function handleProgress(response) {
+    const saveAsBlobURL = ([name, response]) => {
+      const blob = new Blob([response]);
+      const blobURL = URL.createObjectURL(blob);
+      this.cache[name] = blobURL;
+      return [name, response];
+    };
+
+    const handleProgress = () => {
       currentCount += 1;
       currentProgress = currentCount / totalCount;
       if (progress) {
         progress(currentProgress);
       }
-      return response;
-    }
+    };
 
-    const promises = urls.map(url => fetchURL(url).then(handleProgress));
+    const promises = assets.map(([name, url]) =>
+      fetchURL(name, url)
+        .then(saveAsBlobURL)
+        .then(handleProgress)
+    );
     Promise.all(promises).then(() => {
       if (complete) {
         complete();
@@ -54,7 +69,7 @@ class WebAssetsManager {
   }
 
   get(name) {
-    return this.assets[name];
+    return this.cache[name] || this.assets[name];
   }
 }
 
