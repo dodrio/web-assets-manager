@@ -11,17 +11,26 @@ function fetchURL(name, url) {
         const blob = this.response;
         resolve([name, blob]);
       } else {
-        reject({
-          status: this.status,
-          statusText: this.statusText,
-        });
+        reject([
+          name,
+          url,
+          {
+            status: this.status,
+            statusText: this.statusText,
+          },
+        ]);
       }
     };
+
     xhr.onerror = function() {
-      reject({
-        status: this.status,
-        statusText: this.statusText,
-      });
+      reject([
+        name,
+        url,
+        {
+          status: this.status,
+          statusText: this.statusText,
+        },
+      ]);
     };
     xhr.send();
   });
