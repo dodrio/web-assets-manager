@@ -6,23 +6,13 @@ function fetchURL(name, url) {
     const xhr = new window.XMLHttpRequest();
     xhr.open('GET', url);
     xhr.responseType = 'blob';
-    xhr.onload = function() {
-      if ((this.status >= 200 && this.status < 300) || this.status === 304) {
-        const blob = this.response;
-        resolve([name, blob]);
-      } else {
-        reject([
-          name,
-          url,
-          {
-            status: this.status,
-            statusText: this.statusText,
-          },
-        ]);
-      }
-    };
 
-    xhr.onerror = function() {
+    function onResolved() {
+      const blob = this.response;
+      resolve([name, blob]);
+    }
+
+    function onRejected() {
       reject([
         name,
         url,
@@ -31,7 +21,20 @@ function fetchURL(name, url) {
           statusText: this.statusText,
         },
       ]);
+    }
+
+    xhr.onload = function() {
+      if ((this.status >= 200 && this.status < 300) || this.status === 304) {
+        onResolved();
+      } else {
+        onRejected();
+      }
     };
+
+    xhr.onerror = function() {
+      onRejected();
+    };
+
     xhr.send();
   });
 }
@@ -69,7 +72,9 @@ class WebAssetsManager {
       fetchURL(name, url)
         .then(saveAsBlobURL)
         .then(handleProgress)
+        .catch(handleProgress)
     );
+
     Promise.all(promises).then(() => {
       if (complete) {
         complete();
