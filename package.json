@@ -1,6 +1,6 @@
 {
   "name": "web-assets-manager",
-  "version": "2.0.0",
+  "version": "0.0.0",
   "description": "Manager for web assets.",
   "license": "MIT",
   "repository": "m31271n/web-assets-manager",
@@ -14,16 +14,21 @@
   },
   "scripts": {
     "precommit": "lint-staged",
-    "lint": "eslint **/*.js",
+    "lint": "eslint 'src/**/*.js' 'test/**/*.js'",
     "test": "ava",
-    "code-quality": "npm run lint && npm run test"
+    "code-quality": "npm run lint && npm run test",
+    "build": "rm -rf dist && babel src -d dist",
+    "release": "npm run code-quality && npm run build && npm publish"
   },
   "files": ["src/"],
-  "main": "src/index.js",
+  "main": "dist/index.js",
   "keywords": [""],
   "dependencies": {},
   "devDependencies": {
     "ava": "^0.19.1",
+    "@babel/cli": "^7.0.0-beta.47",
+    "@babel/core": "^7.0.0-beta.47",
+    "@babel/preset-env": "^7.0.0-beta.47",
     "eslint": "^4.19.1",
     "eslint-plugin-ava": "^4.5.1",
     "eslint-plugin-node": "^6.0.1",
@@ -38,5 +43,8 @@
       "**/*.{json,md}": ["prettier --write", "git add"],
       "**/*.js": ["prettier --write", "eslint", "git add"]
     }
+  },
+  "babel": {
+    "presets": ["@babel/preset-env"]
   }
 }
