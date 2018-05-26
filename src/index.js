@@ -5,10 +5,11 @@ function fetchURL(name, url) {
   return new Promise(function(resolve, reject) {
     const xhr = new window.XMLHttpRequest();
     xhr.open('GET', url);
-    xhr.responseType = 'arraybuffer';
+    xhr.responseType = 'blob';
     xhr.onload = function() {
       if ((this.status >= 200 && this.status < 300) || this.status === 304) {
-        resolve([name, this.response]);
+        const blob = this.response;
+        resolve([name, blob]);
       } else {
         reject({
           status: this.status,
@@ -41,11 +42,10 @@ class WebAssetsManager {
     let currentCount = 0;
     let currentProgress = 0;
 
-    const saveAsBlobURL = ([name, response]) => {
-      const blob = new Blob([response]);
+    const saveAsBlobURL = ([name, blob]) => {
       const blobURL = URL.createObjectURL(blob);
       this.cache[name] = blobURL;
-      return [name, response];
+      return [name, blob];
     };
 
     const handleProgress = () => {
